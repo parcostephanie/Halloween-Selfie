@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome to the Afterlife</title>
+<style>
+html,body{margin:0;min-height:100%;background:#050505;color:#eee;font-family:Georgia,serif}
+body{display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.wrap{max-width:680px;padding:48px 24px;position:relative;z-index:2}
+.skull{font-size:72px;animation:pulse 2s infinite}
+h1{font-size:clamp(38px,10vw,72px);margin:10px 0;color:#eee;text-shadow:0 0 18px #fff}
+h2{font-size:clamp(22px,5vw,34px);margin:20px 0}
+p{font-size:20px;line-height:1.6}
+.warning{margin-top:30px;padding:18px;border:2px solid #777;border-radius:10px;background:#111}
+button{margin-top:24px;padding:16px 24px;border:1px solid #aaa;border-radius:8px;background:#eee;color:#050505;font-size:18px;font-weight:bold}
+.hidden{display:none}
+.fog{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,#333 0,#111 35%,#050505 75%);opacity:.45}
+@keyframes pulse{50%{transform:scale(1.08);filter:drop-shadow(0 0 18px #fff)}}
+</style>
+</head>
+<body>
+<div class="fog"></div>
+<main class="wrap">
+<div class="skull">💀</div>
+<h1>WELCOME TO THE AFTERLIFE</h1>
+<p>You found us.</p>
+<p>We’ve been waiting for someone brave enough to scan the code.</p>
+<div class="warning">
+<h2>NOW LOOK UP. 👀</h2>
+<p>📸 Take your selfie with the dead.</p>
+<p>And whatever you do…<br><strong>DON’T LET THEM TAKE YOUR SOUL.</strong></p>
+</div>
+<button onclick="reveal()">ENTER THE AFTERLIFE ☠️</button>
+<div id="secret" class="hidden">
+<h2>👁️ THEY SEE YOU.</h2>
+<p>Smile for the picture.</p>
+<p><em>You may be alive… but you’re standing among the dead.</em></p>
+</div>
+</main>
+<script>
+function reveal(){
+  document.getElementById('secret').classList.remove('hidden');
+  if(navigator.vibrate) navigator.vibrate([120,80,180]);
+}
+</script>
+</body>
+</html>
