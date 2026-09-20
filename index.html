@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Welcome to the Afterlife</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#020203;color:#eee;font-family:Georgia,serif}
+body{min-height:100vh;display:flex;justify-content:center;align-items:center;overflow:hidden}
+#app{position:relative;width:100%;max-width:560px;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;background:radial-gradient(circle at 50% 45%,#242424 0,#080808 28%,#020203 65%)}
+.grain{position:absolute;inset:0;opacity:.06;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.fog{position:absolute;bottom:-8%;left:-30%;width:160%;height:45%;opacity:0;filter:blur(18px);background:radial-gradient(ellipse at 25% 70%,#aaa4,transparent 42%),radial-gradient(ellipse at 70% 55%,#aaa3,transparent 45%),radial-gradient(ellipse at 50% 100%,#fff2,transparent 45%);pointer-events:none}.fog.go{opacity:1;animation:fog 9s ease-in-out infinite alternate}
+@keyframes fog{from{transform:translateX(-5%)}to{transform:translateX(7%) scale(1.08)}}
+.content{position:relative;z-index:5;width:90%;padding:28px 16px}.hidden{display:none!important}
+.skull{font-size:76px;line-height:1;margin-bottom:18px}.pulse{animation:pulse 1.8s infinite}.flicker{animation:flicker 1.8s infinite}
+@keyframes pulse{50%{transform:scale(1.06);opacity:.72}}@keyframes flicker{0%,17%,19%,23%,65%,67%,100%{opacity:1}18%,22%,66%{opacity:.2}}
+h1{font-size:clamp(30px,8vw,50px);letter-spacing:4px;line-height:1.08;margin:0 0 14px;text-transform:uppercase}
+h2{font-size:clamp(24px,7vw,38px);letter-spacing:3px;line-height:1.12;margin:0 0 18px;text-transform:uppercase}
+p{font-family:Arial,sans-serif;font-size:16px;line-height:1.65;letter-spacing:1px;color:#ccc}.warning{font-size:14px;letter-spacing:3px;text-transform:uppercase}
+.final{font-size:19px;letter-spacing:2px}.bar{width:65%;height:1px;background:#666;margin:22px auto}
+button{margin-top:20px;padding:17px 24px;background:#080808;color:#fff;border:1px solid #aaa;border-radius:3px;font:16px Georgia,serif;letter-spacing:2px;cursor:pointer;box-shadow:0 0 22px #fff1}
+button:active{transform:scale(.97)}
+.eyes{position:absolute;top:30%;left:0;right:0;z-index:4;font-size:40px;letter-spacing:48px;opacity:0}.eyes.show{animation:eyes 2.7s forwards}
+@keyframes eyes{0%,20%{opacity:0}35%,70%{opacity:1;text-shadow:0 0 15px #fff}100%{opacity:0}}
+.grave{font-size:62px;margin-bottom:12px}.flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:20;pointer-events:none}.flash.go{animation:flash .25s}
+@keyframes flash{from{opacity:.8}to{opacity:0}}.shake{animation:shake .35s}@keyframes shake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="grain"></div><div class="fog" id="fog"></div><div class="eyes" id="eyes">👁️ 👁️</div><div class="flash" id="flash"></div>
+
+<section class="content" id="s1">
+<div class="skull pulse">💀</div><h1 class="flicker">WELCOME TO<br>THE AFTERLIFE</h1><div class="bar"></div>
+<p>You weren't supposed to find this...</p><p class="warning">Whatever you do,<br><b>DON'T LOOK AWAY.</b></p>
+<button onclick="enter()">🔊 TAP TO ENTER</button>
+</section>
+
+<section class="content hidden" id="s2">
+<div class="skull">💀</div><h2>THEY KNOW<br>YOU'RE HERE.</h2>
+<p>Something woke up when you scanned the code.</p><p class="warning">Look outside.</p>
+<button onclick="lookUp()">👁️ I'M LOOKING</button>
+</section>
+
+<section class="content hidden" id="s3">
+<div class="grave">🪦</div><h1 class="flicker">NOW LOOK UP.</h1><div class="bar"></div>
+<p class="final">THE DEAD ARE WAITING FOR YOU.</p><p>They're closer than you think...</p>
+<button onclick="reveal()">☠️ SHOW ME</button>
+</section>
+
+<section class="content hidden" id="s4">
+<div class="skull pulse">💀</div><h2>WE'VE BEEN<br>WAITING FOR YOU.</h2>
+<p class="final">📸 TAKE YOUR SELFIE WITH THE DEAD</p><p>Smile...<br>You're going to be one of us soon.</p>
+<p class="warning flicker">DON'T TURN AROUND.</p>
+<button onclick="finale()">📸 I'M BRAVE ENOUGH</button>
+</section>
+
+<section class="content hidden" id="s5">
+<div class="skull pulse">💀</div><h1>GOT THE<br>PICTURE?</h1><div class="bar"></div>
+<p class="final">TAG US. SHARE THE FEAR.</p><p>And whatever you do...</p>
+<p class="warning flicker">DON'T LET US FOLLOW YOU HOME.</p>
+<button onclick="restart()">↻ START OVER</button>
+</section>
+</div>
+<script>
+let ctx;
+function sound(scary=false){try{ctx=ctx||new(window.AudioContext||window.webkitAudioContext)();let o=ctx.createOscillator(),g=ctx.createGain();o.type=scary?'sawtooth':'sine';o.frequency.setValueAtTime(scary?85:120,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(scary?35:70,ctx.currentTime+.7);g.gain.setValueAtTime(.0001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(scary?.12:.05,ctx.currentTime+.03);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.8);o.connect(g).connect(ctx.destination);o.start();o.stop(ctx.currentTime+.85)}catch(e){}}
+function show(n){for(let i=1;i<=5;i++)document.getElementById('s'+i).classList.toggle('hidden',i!==n)}
+function enter(){sound();document.getElementById('fog').classList.add('go');document.getElementById('eyes').classList.add('show');show(2)}
+function lookUp(){sound();show(3)}
+function reveal(){sound(true);document.getElementById('flash').classList.add('go');document.getElementById('app').classList.add('shake');if(navigator.vibrate)navigator.vibrate([80,50,120]);setTimeout(()=>{document.getElementById('app').classList.remove('shake');show(4)},350)}
+function finale(){sound();show(5)}
+function restart(){document.getElementById('fog').classList.remove('go');show(1)}
+</script>
+</body>
+</html>
