@@ -17,8 +17,19 @@ body{margin:0;background:#050505;color:#eee;font-family:Georgia,serif;text-align
 <p class="notice">Only upload photos you have permission to share. Uploaded photos are publicly displayed on this Halloween wall.</p></section>
 </main>
 <script>
-const URL="https://nrweyzjkmtkxsfasdakz.supabase.co", KEY="sb_publishable_ArrrqLfMhnH7NZA6TJ-pdg_kk9Y8IKF", BUCKET="dead-selfies";
-const sb=supabase.createClient(URL,KEY);
+const SUPABASE_URL="https://nrweyzjkmtkxsfasdakz.supabase.co";
+const KEY="sb_publishable_ArrrqLfMhnH7NZA6TJ-pdg_kk9Y8IKF";
+const BUCKET="dead-selfies";
+
+let sb=null;
+function getSB(){
+  if(!sb){
+    if(!window.supabase) throw new Error("Supabase library did not load.");
+    sb=window.supabase.createClient(SUPABASE_URL,KEY);
+  }
+  return sb;
+}
+
 const $=id=>document.getElementById(id);
 $("enter").onclick=()=>{$("intro").classList.add("hidden");$("haunt").classList.remove("hidden")};
 $("continue").onclick=()=>{$("haunt").classList.add("hidden");$("dead").classList.remove("hidden");loadWall()};
@@ -26,7 +37,7 @@ const file=$("photo"), preview=$("preview"), consent=$("consent"), upload=$("upl
 function ready(){upload.disabled=!(file.files[0]&&consent.checked)}
 file.onchange=()=>{const f=file.files[0];if(!f)return;if(!["image/jpeg","image/png","image/webp"].includes(f.type)||f.size>6*1024*1024){status.textContent="Please choose a JPG, PNG, or WebP under 6 MB.";file.value="";return}preview.src=URL.createObjectURL(f);preview.style.display="block";status.textContent="Your soul is ready.";ready()};
 consent.onchange=ready;
-upload.onclick=async()=>{const f=file.files[0];if(!f)return;upload.disabled=true;status.textContent="Capturing your soul...";const ext=f.name.split(".").pop().toLowerCase(),path=Date.now()+"-"+crypto.randomUUID()+"."+ext;const r=await sb.storage.from(BUCKET).upload(path,f,{contentType:f.type,upsert:false});if(r.error){status.textContent="The dead rejected your soul. Try again.";upload.disabled=false;return}status.textContent="☠️ YOUR SOUL HAS BEEN CAPTURED.";file.value="";preview.style.display="none";consent.checked=false;await loadWall()};
-async function loadWall(){const g=$("gallery"),c=$("count"),r=await sb.storage.from(BUCKET).list("",{limit:100,sortBy:{column:"name",order:"desc"}});if(r.error){c.textContent="THE WALL IS HAUNTED. TRY REFRESH.";return}const fs=(r.data||[]).filter(x=>x.name&&x.name.includes("."));c.textContent=fs.length+" SOUL"+(fs.length===1?"":"S")+" COLLECTED";g.innerHTML="";fs.forEach((f,i)=>{const u=sb.storage.from(BUCKET).getPublicUrl(f.name).data.publicUrl,card=document.createElement("div");card.className="card";card.innerHTML='<img loading="lazy" src="'+u+'" alt="Halloween selfie"><div class="soul">SOUL #'+String(fs.length-i).padStart(3,"0")+"</div>";g.appendChild(card)})}
+upload.onclick=async()=>{const f=file.files[0];if(!f)return;upload.disabled=true;status.textContent="Capturing your soul...";const ext=f.name.split(".").pop().toLowerCase(),path=Date.now()+"-"+crypto.randomUUID()+"."+ext;const r=await getSB().storage.from(BUCKET).upload(path,f,{contentType:f.type,upsert:false});if(r.error){status.textContent="The dead rejected your soul. Try again.";upload.disabled=false;return}status.textContent="☠️ YOUR SOUL HAS BEEN CAPTURED.";file.value="";preview.style.display="none";consent.checked=false;await loadWall()};
+async function loadWall(){const g=$("gallery"),c=$("count"),r=await getSB().storage.from(BUCKET).list("",{limit:100,sortBy:{column:"name",order:"desc"}});if(r.error){c.textContent="THE WALL IS HAUNTED. TRY REFRESH.";return}const fs=(r.data||[]).filter(x=>x.name&&x.name.includes("."));c.textContent=fs.length+" SOUL"+(fs.length===1?"":"S")+" COLLECTED";g.innerHTML="";fs.forEach((f,i)=>{const u=getSB().storage.from(BUCKET).getPublicUrl(f.name).data.publicUrl,card=document.createElement("div");card.className="card";card.innerHTML='<img loading="lazy" src="'+u+'" alt="Halloween selfie"><div class="soul">SOUL #'+String(fs.length-i).padStart(3,"0")+"</div>";g.appendChild(card)})}
 $("refresh").onclick=loadWall;setInterval(loadWall,15000);
 </script></body></html>
