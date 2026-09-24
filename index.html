@@ -1,71 +1,785 @@
 <!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Wall of the Dead</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body{margin:0;background:#050505;color:#eee;font-family:Georgia,serif;text-align:center}main{max-width:900px;margin:auto;padding:24px 16px}.screen{min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center}h1{font-size:clamp(2.5rem,10vw,5rem);text-shadow:0 0 20px #fff,0 0 40px #900}.warning{letter-spacing:.15em;color:#aaa;text-transform:uppercase}button,.pick{background:#111;color:#fff;border:1px solid #666;border-radius:8px;padding:14px 20px;font-weight:bold;cursor:pointer}button:disabled{opacity:.4}input[type=file]{display:none}.panel{background:#101010;border:1px solid #333;border-radius:14px;padding:22px;margin:20px 0}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.card{background:#080808;border:1px solid #292929;border-radius:10px;overflow:hidden}.card img{width:100%;aspect-ratio:1;object-fit:cover;display:block}.soul{padding:8px;font:700 12px Arial;color:#aaa}.notice{font:12px Arial;color:#777;line-height:1.5}.hidden{display:none!important}#preview{max-width:100%;max-height:320px;margin:15px auto;border-radius:10px;display:none}
-</style></head><body><main>
-<section id="intro" class="screen"><h1>THE AFTERLIFE</h1><p class="warning">Look around you...</p><button id="enter">🔊 TAP TO ENTER</button></section>
-<section id="haunt" class="screen hidden"><p class="warning">THEY KNOW YOU'RE HERE.</p><h2>DON'T TURN AROUND.</h2><button id="continue">☠️ MEET THE DEAD</button></section>
-<section id="dead" class="hidden">
-<div class="panel"><h2>💀 TAKE YOUR SELFIE WITH THE DEAD 💀</h2><p>They're dying to meet you.</p>
-<label class="pick" for="photo">📸 TAKE / CHOOSE YOUR SELFIE</label><input id="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
-<img id="preview" alt="Selfie preview"><p><label><input id="consent" type="checkbox"> I understand this photo will be displayed publicly.</label></p>
-<button id="upload" disabled>☠️ CAPTURE MY SOUL</button><p id="status"></p></div>
-<div class="panel"><h2>👻 WALL OF THE DEAD 👻</h2><p id="count">SUMMONING THE SOULS...</p><div id="gallery" class="gallery"></div><button id="refresh">🔄 REFRESH THE DEAD</button></div>
-<p class="notice">Only upload photos you have permission to share. Uploaded photos are publicly displayed on this Halloween wall.</p></section>
-</main>
-<script>
-const SUPABASE_URL="https://nrweyzjkmtkxsfasdakz.supabase.co";
-const KEY="sb_publishable_ArrrqLfMhnH7NZA6TJ-pdg_kk9Y8IKF";
-const BUCKET="Dead-selfies";
-
-let sb=null;
-function getSB(){
-  if(!sb){
-    if(!window.supabase) throw new Error("Supabase library did not load.");
-    sb=window.supabase.createClient(SUPABASE_URL,KEY);
-  }
-  return sb;
-}
-
-const $=id=>document.getElementById(id);
-$("enter").onclick=()=>{$("intro").classList.add("hidden");$("haunt").classList.remove("hidden")};
-$("continue").onclick=()=>{$("haunt").classList.add("hidden");$("dead").classList.remove("hidden");loadWall()};
-const file=$("photo"), preview=$("preview"), consent=$("consent"), upload=$("upload"), status=$("status");
-function ready(){upload.disabled=!(file.files[0]&&consent.checked)}
-file.onchange=()=>{const f=file.files[0];if(!f)return;if(!["image/jpeg","image/png","image/webp"].includes(f.type)||f.size>6*1024*1024){status.textContent="Please choose a JPG, PNG, or WebP under 6 MB.";file.value="";return}preview.src=URL.createObjectURL(f);preview.style.display="block";status.textContent="Your soul is ready.";ready()};
-consent.onchange=ready;
-upload.onclick=async()=>{const f=file.files[0];if(!f)return;upload.disabled=true;status.textContent="Capturing your soul...";const ext=f.name.split(".").pop().toLowerCase(),path=Date.now()+"-"+crypto.randomUUID()+"."+ext;const mime =
-  f.type === "image/jpeg" || f.type === "image/jpg"
-    ? "image/jpeg"
-    : f.type === "image/png"
-    ? "image/png"
-    : f.type === "image/webp"
-    ? "image/webp"
-    : "image/jpeg";
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE WALL OF THE DEAD</title>
  
-const r=await getSB().storage.from(BUCKET).upload(
-  path,
-  f,
-  {
-    contentType:mime,
-    upsert:false
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ 
+<style>
+*{box-sizing:border-box}
+ 
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#030303;
+  color:#eee;
+  font-family:Georgia,serif;
+}
+ 
+body{
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 50% 20%,#241010 0%,#080606 35%,#020202 75%);
+}
+ 
+/* FOG */
+body:before,
+body:after{
+  content:"";
+  position:fixed;
+  inset:-30%;
+  pointer-events:none;
+  z-index:20;
+  opacity:.12;
+  background:
+    radial-gradient(ellipse,#aaa 0%,transparent 60%),
+    radial-gradient(ellipse,#666 0%,transparent 60%);
+  filter:blur(45px);
+  animation:fog 25s linear infinite alternate;
+}
+ 
+body:after{
+  animation-duration:34s;
+  animation-direction:alternate-reverse;
+  opacity:.08;
+}
+ 
+@keyframes fog{
+  from{transform:translateX(-8%) translateY(3%) scale(1)}
+  to{transform:translateX(8%) translateY(-3%) scale(1.15)}
+}
+ 
+main{
+  max-width:1050px;
+  margin:auto;
+  padding:20px 14px 50px;
+  position:relative;
+  z-index:2;
+}
+ 
+.hidden{
+  display:none!important;
+}
+ 
+/* INTRO */
+.screen{
+  min-height:90vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+ 
+h1{
+  font-size:clamp(3rem,12vw,7rem);
+  margin:0 0 10px;
+  letter-spacing:.08em;
+  text-shadow:
+    0 0 8px #fff,
+    0 0 25px #900,
+    0 0 60px #500;
+  animation:glow 3s ease-in-out infinite alternate;
+}
+ 
+@keyframes glow{
+  from{opacity:.75}
+  to{opacity:1}
+}
+ 
+.warning{
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:#aaa;
+  font-size:12px;
+}
+ 
+button,.pick{
+  background:linear-gradient(#171717,#080808);
+  color:white;
+  border:1px solid #666;
+  border-radius:7px;
+  padding:14px 22px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 0 18px #000;
+  transition:.25s;
+}
+ 
+button:hover,.pick:hover{
+  border-color:#bbb;
+  box-shadow:0 0 20px #900;
+  transform:translateY(-2px);
+}
+ 
+button:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+ 
+input[type=file]{
+  display:none;
+}
+ 
+/* HAUNT */
+#haunt h2{
+  font-size:clamp(2rem,8vw,4rem);
+  text-shadow:0 0 25px #900;
+  animation:flicker 4s infinite;
+}
+ 
+@keyframes flicker{
+  0%,18%,20%,22%,63%,64%,100%{opacity:1}
+  19%,21%,62%{opacity:.25}
+}
+ 
+/* PANELS */
+.panel{
+  position:relative;
+  background:
+    linear-gradient(135deg,rgba(30,30,30,.95),rgba(5,5,5,.98));
+  border:1px solid #333;
+  border-radius:16px;
+  padding:25px 18px;
+  margin:22px 0;
+  box-shadow:
+    0 0 30px rgba(0,0,0,.8),
+    inset 0 0 35px rgba(120,0,0,.08);
+}
+ 
+.panel h2{
+  letter-spacing:.08em;
+}
+ 
+/* UPLOAD */
+#preview{
+  max-width:100%;
+  max-height:340px;
+  margin:18px auto;
+  border-radius:10px;
+  display:none;
+  box-shadow:0 0 25px #000;
+}
+ 
+/* WALL HEADER */
+.wall-title{
+  font-size:clamp(2rem,7vw,4rem);
+  letter-spacing:.12em;
+  margin:5px 0;
+  text-shadow:
+    0 0 5px #fff,
+    0 0 20px #900,
+    0 0 45px #600;
+}
+ 
+.wall-subtitle{
+  color:#888;
+  font-style:italic;
+  margin-top:4px;
+}
+ 
+#count{
+  display:inline-block;
+  margin:15px 0 22px;
+  padding:9px 16px;
+  border:1px solid #555;
+  border-radius:30px;
+  background:#090909;
+  color:#ddd;
+  letter-spacing:.12em;
+  font:bold 13px Arial;
+  box-shadow:0 0 15px #300;
+}
+ 
+/* GALLERY */
+.gallery{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+  gap:18px;
+}
+ 
+/* TOMBSTONE CARD */
+.card{
+  position:relative;
+  overflow:hidden;
+  background:#070707;
+  border:2px solid #333;
+  border-radius:75px 75px 8px 8px;
+  padding:8px;
+  box-shadow:
+    0 8px 18px #000,
+    0 0 15px rgba(120,0,0,.18);
+  animation:rise .7s ease both;
+}
+ 
+@keyframes rise{
+  from{
+    opacity:0;
+    transform:translateY(25px) scale(.94);
   }
-);if(r.error){
-  console.error("SUPABASE UPLOAD ERROR:", r.error);
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+ 
+.card:before{
+  content:"";
+  position:absolute;
+  inset:4px;
+  border:1px solid #555;
+  border-radius:68px 68px 5px 5px;
+  pointer-events:none;
+  z-index:2;
+}
+ 
+.card img{
+  width:100%;
+  aspect-ratio:1;
+  object-fit:cover;
+  display:block;
+  border-radius:60px 60px 4px 4px;
+  filter:sepia(.12) contrast(1.08);
+}
+ 
+.soul{
+  padding:10px 3px 6px;
+  color:#aaa;
+  font:700 11px Arial;
+  letter-spacing:.14em;
+}
+ 
+/* NEW SOUL EFFECT */
+.new-soul{
+  animation:
+    rise .7s ease both,
+    soulGlow 2s ease-in-out 3;
+}
+ 
+@keyframes soulGlow{
+  0%,100%{box-shadow:0 8px 18px #000,0 0 15px rgba(120,0,0,.2)}
+  50%{box-shadow:0 8px 18px #000,0 0 35px rgba(255,255,255,.55)}
+}
+ 
+/* STATUS */
+#status{
+  min-height:20px;
+  color:#bbb;
+  font-weight:bold;
+}
+ 
+/* NOTICE */
+.notice{
+  font:12px Arial;
+  color:#666;
+  line-height:1.6;
+  max-width:700px;
+  margin:20px auto;
+}
+ 
+/* CANDLES */
+.candle{
+  position:fixed;
+  bottom:15px;
+  width:6px;
+  height:30px;
+  background:#ddd;
+  opacity:.25;
+  z-index:1;
+}
+ 
+.candle:before{
+  content:"";
+  position:absolute;
+  width:10px;
+  height:15px;
+  background:#ff9b32;
+  border-radius:50%;
+  left:-2px;
+  top:-13px;
+  filter:blur(2px);
+  animation:flame .8s infinite alternate;
+}
+ 
+.c1{left:8%}
+.c2{right:8%}
+.c3{left:50%}
+ 
+@keyframes flame{
+  from{transform:scale(.8) rotate(-4deg)}
+  to{transform:scale(1.15) rotate(5deg)}
+}
+ 
+/* MOBILE */
+@media(max-width:600px){
+  main{
+    padding-left:10px;
+    padding-right:10px;
+  }
+ 
+  .gallery{
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+  }
+ 
+  .panel{
+    padding:20px 12px;
+  }
+ 
+  .card{
+    border-radius:55px 55px 7px 7px;
+  }
+ 
+  .card:before{
+    border-radius:50px 50px 5px 5px;
+  }
+}
+</style>
+</head>
+ 
+<body>
+ 
+<div class="candle c1"></div>
+<div class="candle c2"></div>
+<div class="candle c3"></div>
+ 
+<main>
+ 
+<!-- INTRO -->
+<section id="intro" class="screen">
+ 
+<h1>THE AFTERLIFE</h1>
+ 
+<p class="warning">
+LOOK AROUND YOU...
+</p>
+ 
+<button id="enter">
+🔊 TAP TO ENTER
+</button>
+ 
+</section>
+ 
+ 
+<!-- HAUNT -->
+<section id="haunt" class="screen hidden">
+ 
+<p class="warning">
+THEY KNOW YOU'RE HERE.
+</p>
+ 
+<h2>
+DON'T TURN AROUND.
+</h2>
+ 
+<button id="continue">
+☠️ MEET THE DEAD
+</button>
+ 
+</section>
+ 
+ 
+<!-- DEAD EXPERIENCE -->
+<section id="dead" class="hidden">
+ 
+<div class="panel">
+ 
+<h2>
+💀 TAKE YOUR SELFIE WITH THE DEAD 💀
+</h2>
+ 
+<p>
+They're dying to meet you.
+</p>
+ 
+<label class="pick" for="photo">
+📸 TAKE / CHOOSE YOUR SELFIE
+</label>
+ 
+<input
+id="photo"
+type="file"
+accept="image/jpeg,image/png,image/webp"
+capture="environment"
+>
+ 
+<img
+id="preview"
+alt="Selfie preview"
+>
+ 
+<p>
+<label>
+<input id="consent" type="checkbox">
+I understand this photo will be displayed publicly.
+</label>
+</p>
+ 
+<button id="upload" disabled>
+☠️ CAPTURE MY SOUL
+</button>
+ 
+<p id="status"></p>
+ 
+</div>
+ 
+ 
+<!-- WALL -->
+<div class="panel">
+ 
+<div class="wall-title">
+☠️ WALL OF THE DEAD ☠️
+</div>
+ 
+<div class="wall-subtitle">
+Those who entered... never truly left.
+</div>
+ 
+<p id="count">
+SUMMONING THE SOULS...
+</p>
+ 
+<div id="gallery" class="gallery"></div>
+ 
+<br>
+ 
+<button id="refresh">
+🔄 REFRESH THE DEAD
+</button>
+ 
+</div>
+ 
+<p class="notice">
+Only upload photos you have permission to share.
+Uploaded photos are publicly displayed on this Halloween wall.
+</p>
+ 
+</section>
+ 
+</main>
+ 
+ 
+<script>
+ 
+/* SUPABASE */
+const SUPABASE_URL =
+"https://nrweyzjkmtkxsfasdakz.supabase.co";
+ 
+const KEY =
+"sb_publishable_ArrrqLfMhnH7NZA6TJ-pdg_kk9Y8IKF";
+ 
+/* IMPORTANT: exact bucket capitalization */
+const BUCKET =
+"Dead-selfies";
+ 
+const sb =
+supabase.createClient(
+SUPABASE_URL,
+KEY
+);
+ 
+ 
+/* HELPERS */
+const $ = id =>
+document.getElementById(id);
+ 
+ 
+/* SCREENS */
+$("enter").onclick = () => {
+ 
+  $("intro").classList.add("hidden");
+ 
+  $("haunt").classList.remove("hidden");
+ 
+};
+ 
+ 
+$("continue").onclick = () => {
+ 
+  $("haunt").classList.add("hidden");
+ 
+  $("dead").classList.remove("hidden");
+ 
+  loadWall();
+ 
+};
+ 
+ 
+/* UPLOAD ELEMENTS */
+const file = $("photo");
+const preview = $("preview");
+const consent = $("consent");
+const upload = $("upload");
+const status = $("status");
+ 
+ 
+function ready(){
+ 
+  upload.disabled =
+    !(file.files[0] && consent.checked);
+ 
+}
+ 
+ 
+/* FILE SELECT */
+file.onchange = () => {
+ 
+  const f = file.files[0];
+ 
+  if(!f) return;
+ 
+ 
+  if(
+    ![
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ].includes(f.type)
+    ||
+    f.size > 6 * 1024 * 1024
+  ){
+ 
+    status.textContent =
+      "Please choose a JPG, PNG, or WebP under 6 MB.";
+ 
+    file.value = "";
+ 
+    return;
+ 
+  }
+ 
+ 
+  preview.src =
+    window.URL.createObjectURL(f);
+ 
+  preview.style.display =
+    "block";
  
   status.textContent =
-    "UPLOAD ERROR: " +
-    (r.error.message || "Unknown error") +
-    " [" +
-    (r.error.statusCode || r.error.status || "") +
-    "]";
+    "Your soul is ready.";
  
-  upload.disabled=false;
-  return;
-}status.textContent="☠️ YOUR SOUL HAS BEEN CAPTURED.";file.value="";preview.style.display="none";consent.checked=false;await loadWall()};
-async function loadWall(){const g=$("gallery"),c=$("count"),r=await getSB().storage.from(BUCKET).list("",{limit:100,sortBy:{column:"name",order:"desc"}});if(r.error){c.textContent="THE WALL IS HAUNTED. TRY REFRESH.";return}const fs=(r.data||[]).filter(x=>x.name&&x.name.includes("."));c.textContent=fs.length+" SOUL"+(fs.length===1?"":"S")+" COLLECTED";g.innerHTML="";fs.forEach((f,i)=>{const u=getSB().storage.from(BUCKET).getPublicUrl(f.name).data.publicUrl,card=document.createElement("div");card.className="card";card.innerHTML='<img loading="lazy" src="'+u+'" alt="Halloween selfie"><div class="soul">SOUL #'+String(fs.length-i).padStart(3,"0")+"</div>";g.appendChild(card)})}
-$("refresh").onclick=loadWall;setInterval(loadWall,15000);
-</script></body></html>
+  ready();
+ 
+};
+ 
+ 
+consent.onchange = ready;
+ 
+ 
+/* UPLOAD */
+upload.onclick = async () => {
+ 
+  const f = file.files[0];
+ 
+  if(!f) return;
+ 
+  upload.disabled = true;
+ 
+  status.textContent =
+    "Capturing your soul...";
+ 
+ 
+  const ext =
+    f.name.split(".").pop().toLowerCase();
+ 
+ 
+  const path =
+    Date.now()
+    + "-"
+    + crypto.randomUUID()
+    + "."
+    + ext;
+ 
+ 
+  /* Force accepted MIME types */
+  const mime =
+    f.type === "image/png"
+      ? "image/png"
+      : f.type === "image/webp"
+      ? "image/webp"
+      : "image/jpeg";
+ 
+ 
+  const r =
+    await sb.storage
+      .from(BUCKET)
+      .upload(
+        path,
+        f,
+        {
+          contentType:mime,
+          upsert:false
+        }
+      );
+ 
+ 
+  if(r.error){
+ 
+    console.error(
+      "SUPABASE UPLOAD ERROR:",
+      r.error
+    );
+ 
+    status.textContent =
+      "UPLOAD ERROR: "
+      + (
+        r.error.message
+        || "Unknown error"
+      )
+      + " ["
+      + (
+        r.error.statusCode
+        || r.error.status
+        || ""
+      )
+      + "]";
+ 
+    upload.disabled = false;
+ 
+    return;
+ 
+  }
+ 
+ 
+  status.textContent =
+    "☠️ YOUR SOUL HAS BEEN CAPTURED.";
+ 
+ 
+  file.value = "";
+ 
+  preview.style.display =
+    "none";
+ 
+  consent.checked = false;
+ 
+ 
+  await loadWall();
+ 
+};
+ 
+ 
+/* WALL */
+async function loadWall(){
+ 
+  const gallery =
+    $("gallery");
+ 
+  const count =
+    $("count");
+ 
+ 
+  const r =
+    await sb.storage
+      .from(BUCKET)
+      .list(
+        "",
+        {
+          limit:100,
+          sortBy:{
+            column:"name",
+            order:"desc"
+          }
+        }
+      );
+ 
+ 
+  if(r.error){
+ 
+    console.error(r.error);
+ 
+    count.textContent =
+      "THE WALL IS HAUNTED. TRY REFRESH.";
+ 
+    return;
+ 
+  }
+ 
+ 
+  const fs =
+    (r.data || [])
+      .filter(
+        x =>
+          x.name &&
+          x.name.includes(".")
+      );
+ 
+ 
+  count.textContent =
+    fs.length
+    + " SOUL"
+    + (
+      fs.length === 1
+        ? ""
+        : "S"
+    )
+    + " COLLECTED";
+ 
+ 
+  gallery.innerHTML = "";
+ 
+ 
+  fs.forEach((f,i) => {
+ 
+    const u =
+      sb.storage
+        .from(BUCKET)
+        .getPublicUrl(f.name)
+        .data.publicUrl;
+ 
+ 
+    const card =
+      document.createElement("div");
+ 
+ 
+    card.className =
+      "card";
+ 
+ 
+    card.style.animationDelay =
+      Math.min(i * .05,.8) + "s";
+ 
+ 
+    card.innerHTML =
+      '<img loading="lazy" src="'
+      + u
+      + '" alt="Halloween selfie">'
+      +
+      '<div class="soul">'
+      +
+      "SOUL #"
+      +
+      String(
+        fs.length - i
+      ).padStart(3,"0")
+      +
+      "</div>";
+ 
+ 
+    gallery.appendChild(card);
+ 
+  });
+ 
+}
+ 
+ 
+/* MANUAL REFRESH */
+$("refresh").onclick = () => {
+ 
+  loadWall();
+ 
+};
+ 
+ 
+/* AUTO REFRESH EVERY 15 SECONDS */
+setInterval(
+  loadWall,
+  15000
+);
+ 
+</script>
+ 
+</body>
+</html>
+ 
