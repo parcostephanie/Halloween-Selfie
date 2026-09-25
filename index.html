@@ -336,6 +336,24 @@ input[type=file]{
     border-radius:50px 50px 5px 5px;
   }
 }
+ /* ☠️ DEADLY SCREEN SHAKE */
+body.shake{
+  animation:deadShake .55s ease-in-out;
+}
+
+@keyframes deadShake{
+  0%   {transform:translate(0,0) rotate(0deg)}
+  10%  {transform:translate(-7px,4px) rotate(-1deg)}
+  20%  {transform:translate(6px,-5px) rotate(1deg)}
+  30%  {transform:translate(-8px,-3px) rotate(-1deg)}
+  40%  {transform:translate(7px,5px) rotate(1deg)}
+  50%  {transform:translate(-5px,-4px) rotate(-1deg)}
+  60%  {transform:translate(5px,3px) rotate(1deg)}
+  70%  {transform:translate(-4px,0) rotate(0deg)}
+  80%  {transform:translate(3px,-2px)}
+  90%  {transform:translate(-2px,1px)}
+  100% {transform:translate(0,0) rotate(0deg)}
+}
 </style>
 </head>
  
@@ -497,14 +515,36 @@ $("enter").onclick = () => {
  
  
 $("continue").onclick = () => {
- 
+
+  // 👻 VIBRATE THE PHONE
+  if (navigator.vibrate) {
+    navigator.vibrate([
+      120,
+      80,
+      180,
+      70,
+      350
+    ]);
+  }
+
+  // ☠️ SHAKE THE SCREEN
+  document.body.classList.remove("shake");
+
+  // Force animation to restart every time
+  void document.body.offsetWidth;
+
+  document.body.classList.add("shake");
+
+  // Move to the selfie page
   $("haunt").classList.add("hidden");
- 
+
   $("dead").classList.remove("hidden");
- 
+
   loadWall();
- 
+
 };
+ 
+
  
  
 /* UPLOAD ELEMENTS */
