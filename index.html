@@ -532,22 +532,6 @@ $("continue").onclick = () => {
   void document.body.offsetWidth;
   document.body.classList.add("shake");
 
-  // 👹 WHISPER
-  setTimeout(() => {
-
-    const whisper = new SpeechSynthesisUtterance(
-      "Don't turn around..."
-    );
-
-    whisper.volume = 0.35;
-    whisper.rate = 0.72;
-    whisper.pitch = 0.45;
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(whisper);
-
-  }, 450);
-
   // Move to the selfie page
   $("haunt").classList.add("hidden");
   $("dead").classList.remove("hidden");
